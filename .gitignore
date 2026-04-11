@@ -193,3 +193,8 @@ examples/data/
 openviking/_version.py
 specs/
 .trae/
+
+# Local dev data
+.webstudio-local/
+.codex-local/
+PigAPI/
