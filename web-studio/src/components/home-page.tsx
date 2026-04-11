@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Cell, Label, Pie, PieChart } from 'recharts'
 
@@ -109,26 +109,41 @@ function Panel({
   className?: string
 }) {
   return (
-    <div className={`rounded-2xl bg-muted/50 p-6 transition-colors duration-200 hover:bg-muted/70 dark:bg-muted/30 dark:hover:bg-muted/50 ${className}`}>
+    <div className={`rounded-2xl bg-muted/50 p-6 transition-colors duration-200 hover:bg-muted/70 dark:bg-white/[0.08] dark:hover:bg-white/[0.12] ${className}`}>
       {children}
     </div>
   )
 }
 
-// ---------- detect dark mode ----------
+// ---------- detect dark mode (reactive) ----------
+
+function subscribeToTheme(callback: () => void) {
+  const observer = new MutationObserver(callback)
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['class', 'data-theme', 'style'],
+  })
+  return () => observer.disconnect()
+}
+
+function getIsDarkSnapshot() {
+  if (typeof document === 'undefined') return false
+  const el = document.documentElement
+  // support class-based (e.g. "dark") and data-attribute-based themes
+  return el.classList.contains('dark') || el.getAttribute('data-theme') === 'dark'
+}
 
 function useIsDark() {
-  // read from <html> class or data attribute set by next-themes / theme provider
-  if (typeof document === 'undefined') return false
-  return document.documentElement.classList.contains('dark')
+  return useSyncExternalStore(subscribeToTheme, getIsDarkSnapshot, () => false)
 }
 
 // ---------- breathing dot ----------
 
-const breathingStyleTag = (() => {
-  if (typeof document === 'undefined') return null
+// inject breathing keyframes once
+void (() => {
+  if (typeof document === 'undefined') return
   const id = 'breathing-dot-keyframes'
-  if (document.getElementById(id)) return null
+  if (document.getElementById(id)) return
   const style = document.createElement('style')
   style.id = id
   style.textContent = `
@@ -138,7 +153,6 @@ const breathingStyleTag = (() => {
     }
   `
   document.head.appendChild(style)
-  return style
 })()
 
 function BreathingDot({ color, size = 'size-2.5' }: { color: string; size?: string }) {
@@ -170,7 +184,7 @@ function StatCard({
   isError: boolean
 }) {
   return (
-    <div className="flex flex-col justify-between gap-4 rounded-2xl bg-muted/50 p-6 transition-colors duration-200 hover:bg-muted/70 dark:bg-muted/30 dark:hover:bg-muted/50">
+    <div className="flex flex-col justify-between gap-4 rounded-2xl bg-muted/50 p-6 transition-colors duration-200 hover:bg-muted/70 dark:bg-white/[0.08] dark:hover:bg-white/[0.12]">
       <span className="text-sm tracking-wide text-muted-foreground">{title}</span>
       {isLoading ? (
         <Skeleton className="h-12 w-28" />
@@ -307,7 +321,7 @@ function MemoryStatsCard({
                 outerRadius={80}
                 dataKey="value"
                 strokeWidth={3}
-                stroke="var(--color-background)"
+                stroke={isDark ? 'hsl(240 3.7% 15.9%)' : 'hsl(0 0% 100%)'}
               >
                 {chartData.map((entry) => (
                   <Cell key={entry.name} fill={colors[entry.name] ?? '#94a3b8'} />
@@ -315,7 +329,8 @@ function MemoryStatsCard({
                 <Label
                   value={String(total)}
                   position="center"
-                  className="fill-foreground text-3xl font-bold"
+                  fill={isDark ? '#fafafa' : '#18181b'}
+                  className="text-3xl font-bold"
                 />
               </Pie>
             </PieChart>
@@ -389,11 +404,11 @@ function RecentTasksCard({
   )
 }
 
-const SESSION_STATUS_STYLES: Record<string, { bg: string; text: string }> = {
-  active:    { bg: 'rgba(126,158,126,0.15)', text: '#7e9e7e' },   // sage green
-  committed: { bg: 'rgba(142,154,175,0.15)', text: '#8e9aaf' },   // dusty blue
-  archived:  { bg: 'rgba(176,170,162,0.15)', text: '#8d8478' },   // warm taupe
-  expired:   { bg: 'rgba(176,126,126,0.15)', text: '#b07e7e' },   // dusty rose
+const SESSION_STATUS_STYLES: Record<string, { bg: string; text: string; darkBg: string; darkText: string }> = {
+  active:    { bg: 'rgba(126,158,126,0.15)', text: '#7e9e7e', darkBg: 'rgba(126,158,126,0.25)', darkText: '#a4c4a4' },
+  committed: { bg: 'rgba(142,154,175,0.15)', text: '#8e9aaf', darkBg: 'rgba(142,154,175,0.25)', darkText: '#b0bcd0' },
+  archived:  { bg: 'rgba(176,170,162,0.15)', text: '#8d8478', darkBg: 'rgba(176,170,162,0.25)', darkText: '#b8aea2' },
+  expired:   { bg: 'rgba(176,126,126,0.15)', text: '#b07e7e', darkBg: 'rgba(176,126,126,0.25)', darkText: '#d0a0a0' },
 }
 
 function SessionsCard({
@@ -405,6 +420,7 @@ function SessionsCard({
   isLoading: boolean
   isError: boolean
 }) {
+  const isDark = useIsDark()
   const sessions = asArray(data).slice(0, 10)
 
   return (
@@ -435,11 +451,14 @@ function SessionsCard({
                   <TableCell>
                     {(() => {
                       const status = asString(session.status) || 'active'
-                      const style = SESSION_STATUS_STYLES[status] ?? SESSION_STATUS_STYLES.active
+                      const style = SESSION_STATUS_STYLES[status] ?? SESSION_STATUS_STYLES.active!
                       return (
                         <span
                           className="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
-                          style={{ backgroundColor: style!.bg, color: style!.text }}
+                          style={{
+                            backgroundColor: isDark ? style!.darkBg : style!.bg,
+                            color: isDark ? style!.darkText : style!.text,
+                          }}
                         >
                           {status}
                         </span>
