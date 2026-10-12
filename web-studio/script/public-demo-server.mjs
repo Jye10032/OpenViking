@@ -84,10 +84,10 @@ const routes = new Map([
 ])
 const dynamicRoutes = [
   // Deliberately exclude auto_create: a GET can otherwise create a session.
-  [/^\/api\/v1\/sessions\/[\w-]+$/, []],
-  [/^\/api\/v1\/sessions\/[\w-]+\/context$/, ['token_budget']],
-  [/^\/api\/v1\/sessions\/[\w-]+\/archives\/[\w.-]+$/, []],
-  [/^\/api\/v1\/stats\/sessions\/[\w-]+$/, []],
+  [/^\/api\/v1\/sessions\/[\w.%~:-]+$/, []],
+  [/^\/api\/v1\/sessions\/[\w.%~:-]+\/context$/, ['token_budget']],
+  [/^\/api\/v1\/sessions\/[\w.%~:-]+\/archives\/[\w.-]+$/, []],
+  [/^\/api\/v1\/stats\/sessions\/[\w.%~:-]+$/, []],
   [
     /^\/api\/v1\/skills\/[\w.-]+$/,
     [
@@ -103,6 +103,24 @@ const dynamicRoutes = [
 
 export function isAllowedRead(method, url) {
   if (method !== 'GET') return false
+  // IDs may contain percent-encoded provider names and '~'. Reject decoded
+  // separators so an encoded ID cannot become another upstream route.
+  try {
+    if (
+      url.pathname.split('/').some((segment) => {
+        const decoded = decodeURIComponent(segment)
+        return (
+          decoded.includes('/') ||
+          decoded.includes('\\') ||
+          decoded === '.' ||
+          decoded === '..'
+        )
+      })
+    )
+      return false
+  } catch {
+    return false
+  }
   const keys =
     routes.get(url.pathname) ??
     dynamicRoutes.find(([pattern]) => pattern.test(url.pathname))?.[1]

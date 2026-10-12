@@ -16,6 +16,7 @@ test('only explicitly reviewed reads pass; GET cannot auto-create sessions', () 
     '/api/v1/fs/ls?uri=viking://&show_all_hidden=true&sort_by=mtime&sort_order=desc',
     '/api/v1/fs/tree?uri=viking://&show_all_hidden=true&node_limit=1000&level_limit=3',
     '/api/v1/skills?node_limit=1000',
+    '/api/v1/sessions/cli__default__abc%253Avikingbot-web-id~123',
     '/api/v1/skills/demo?include_content=true&include_files=true&target_uri=viking://user/skills',
     '/api/v1/fs/ls?uri=viking://resources',
     '/api/v1/sessions/demo/context?token_budget=1000',
@@ -27,6 +28,9 @@ test('only explicitly reviewed reads pass; GET cannot auto-create sessions', () 
     '/api/v1/sessions/demo?auto_create=true',
     '/api/v1/fs/ls?uri=viking://&account_id=other',
     '/api/v1/unknown',
+    '/api/v1/sessions/a%2Fb',
+    '/api/v1/sessions/a%5Cb',
+    '/api/v1/sessions/bad%ZZ',
     '/api/v1/sessions/demo/config',
   ]) {
     assert.equal(
