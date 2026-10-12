@@ -1,5 +1,10 @@
 const workspace = {
   appShell: {
+    publicDemo: {
+      title: '公开只读展示 · default / jye10032',
+      description:
+        '已自动连接，可浏览现有资源、记忆、会话和用量。新增、编辑、删除、管理和发起对话均已停用。',
+    },
     footer: {
       agentIntegrations: 'Agent 接入',
       beta: 'Beta',

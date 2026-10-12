@@ -62,6 +62,8 @@ import {
 import type { ServerMode } from '#/hooks/use-server-mode'
 import { cn } from '#/lib/utils'
 import { resolveStudioManagementCapabilities } from '#/lib/studio-permissions'
+import { PUBLIC_DEMO } from '#/lib/public-demo'
+import { PublicDemoNotice } from '#/components/public-demo-notice'
 
 type NavItem = {
   icon: React.ComponentType
@@ -327,7 +329,18 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
   })
   const crossDeviceVerifyActive =
     pathname === '/oauth/verify' || pathname.startsWith('/oauth/verify/')
-  const visibleNavItems = NAV_ITEMS
+  const visibleNavItems = PUBLIC_DEMO
+    ? NAV_ITEMS.filter((item) =>
+        [
+          'home',
+          'filesystem',
+          'skills',
+          'sessions',
+          'requestLogs',
+          'monitoring',
+        ].includes(item.id),
+      )
+    : NAV_ITEMS
 
   function openCrossDeviceVerify(): void {
     if (crossDeviceVerifyActive) {
@@ -356,7 +369,13 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
         <SidebarHeader className="h-12 border-b border-sidebar-border/70 px-2 py-0">
           <div className="flex h-full items-center justify-between gap-2 group-data-[collapsible=icon]:justify-center">
             <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-              <AccountSwitcher />
+              {PUBLIC_DEMO ? (
+                <span className="px-2 text-sm font-medium">
+                  {connection.accountId}
+                </span>
+              ) : (
+                <AccountSwitcher />
+              )}
             </div>
             <SidebarTrigger className="hidden shrink-0 md:inline-flex" />
           </div>
@@ -415,75 +434,79 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
             </SidebarGroup>
           ))}
 
-          <SidebarGroup className="pb-1">
-            <SidebarGroupLabel className="h-7 px-2 pt-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/45">
-              {t('sidebar.groups.settings', { ns: 'appShell' })}
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    render={<Link to="/settings" />}
-                    isActive={settingsActive}
-                    tooltip={t('footer.connection', { ns: 'appShell' })}
-                    className="h-9"
-                  >
-                    <CableIcon />
-                    <span>{t('footer.connection', { ns: 'appShell' })}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                {canManageUsers ? (
+          {!PUBLIC_DEMO && (
+            <SidebarGroup className="pb-1">
+              <SidebarGroupLabel className="h-7 px-2 pt-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/45">
+                {t('sidebar.groups.settings', { ns: 'appShell' })}
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton
-                      render={<Link to="/gateway" />}
-                      isActive={gatewayActive}
-                      tooltip={t('footer.gatewayBeta', {
-                        ns: 'appShell',
-                      })}
-                      className="h-9 pr-12"
-                    >
-                      <WaypointsIcon />
-                      <span>{t('footer.gateway', { ns: 'appShell' })}</span>
-                    </SidebarMenuButton>
-                    {/* Hidden while the sidebar is collapsed; the tooltip says Beta then. */}
-                    <SidebarMenuBadge className="h-4.5 rounded-full border border-sidebar-border px-1.5 text-[10px] font-medium text-sidebar-foreground/55 peer-data-[size=default]/menu-button:top-[9px]">
-                      {t('footer.beta', { ns: 'appShell' })}
-                    </SidebarMenuBadge>
-                  </SidebarMenuItem>
-                ) : null}
-                {canManageUsers ? (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      render={<Link to="/users" />}
-                      isActive={usersActive}
-                      tooltip={t('footer.users', { ns: 'appShell' })}
+                      render={<Link to="/settings" />}
+                      isActive={settingsActive}
+                      tooltip={t('footer.connection', { ns: 'appShell' })}
                       className="h-9"
                     >
-                      <UsersRoundIcon />
-                      <span>{t('footer.users', { ns: 'appShell' })}</span>
+                      <CableIcon />
+                      <span>{t('footer.connection', { ns: 'appShell' })}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                ) : null}
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={openCrossDeviceVerify}
-                    isActive={crossDeviceVerifyActive}
-                    tooltip={t('navigation.crossDeviceVerify.title', {
-                      ns: 'appShell',
-                    })}
-                    className="h-9"
-                  >
-                    <KeyRoundIcon />
-                    <span>
-                      {t('navigation.crossDeviceVerify.title', {
-                        ns: 'appShell',
-                      })}
-                    </span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+                  {canManageUsers ? (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        render={<Link to="/gateway" />}
+                        isActive={gatewayActive}
+                        tooltip={t('footer.gatewayBeta', {
+                          ns: 'appShell',
+                        })}
+                        className="h-9 pr-12"
+                      >
+                        <WaypointsIcon />
+                        <span>{t('footer.gateway', { ns: 'appShell' })}</span>
+                      </SidebarMenuButton>
+                      {/* Hidden while the sidebar is collapsed; the tooltip says Beta then. */}
+                      <SidebarMenuBadge className="h-4.5 rounded-full border border-sidebar-border px-1.5 text-[10px] font-medium text-sidebar-foreground/55 peer-data-[size=default]/menu-button:top-[9px]">
+                        {t('footer.beta', { ns: 'appShell' })}
+                      </SidebarMenuBadge>
+                    </SidebarMenuItem>
+                  ) : null}
+                  {canManageUsers ? (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        render={<Link to="/users" />}
+                        isActive={usersActive}
+                        tooltip={t('footer.users', { ns: 'appShell' })}
+                        className="h-9"
+                      >
+                        <UsersRoundIcon />
+                        <span>{t('footer.users', { ns: 'appShell' })}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ) : null}
+                  {!PUBLIC_DEMO && (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        onClick={openCrossDeviceVerify}
+                        isActive={crossDeviceVerifyActive}
+                        tooltip={t('navigation.crossDeviceVerify.title', {
+                          ns: 'appShell',
+                        })}
+                        className="h-9"
+                      >
+                        <KeyRoundIcon />
+                        <span>
+                          {t('navigation.crossDeviceVerify.title', {
+                            ns: 'appShell',
+                          })}
+                        </span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )}
 
           <SidebarGroup className="pb-1">
             <SidebarGroupLabel className="h-7 px-2 pt-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-sidebar-foreground/45">
@@ -608,12 +631,19 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
 
             <div className="h-6 w-px bg-border/80" aria-hidden="true" />
 
-            <CurrentUserMenu />
+            {PUBLIC_DEMO ? (
+              <span className="text-sm text-muted-foreground">
+                {connection.accountId} / {connection.userId}
+              </span>
+            ) : (
+              <CurrentUserMenu />
+            )}
           </div>
         </header>
 
         <ScrollArea className="min-h-0 flex-1">
           <div className="flex w-full flex-col gap-6 px-4 py-6 md:px-6">
+            {PUBLIC_DEMO && <PublicDemoNotice />}
             {children}
           </div>
         </ScrollArea>

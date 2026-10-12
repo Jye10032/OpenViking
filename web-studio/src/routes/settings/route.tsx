@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Navigate } from '@tanstack/react-router'
 import {
   CircleAlertIcon,
   CircleDashedIcon,
@@ -23,6 +23,7 @@ import {
 } from '#/components/ui/field'
 import { Input } from '#/components/ui/input'
 import { useAppConnection } from '#/hooks/use-app-connection'
+import { PUBLIC_DEMO } from '#/lib/public-demo'
 import { probeStudioConnection } from '#/lib/admin'
 import type { CapabilityProbeResult } from '#/lib/admin'
 import { DEFAULT_ACCOUNT_ID, DEFAULT_USER_ID } from '#/lib/admin-options'
@@ -32,8 +33,12 @@ import { localizeCapabilityDetail } from './-lib/localize-capability-probe'
 import type { ConnectionDraft } from '#/hooks/use-app-connection'
 
 export const Route = createFileRoute('/settings')({
-  component: ConnectionSettingsRoute,
+  component: PUBLIC_DEMO ? PublicDemoSettingsRedirect : ConnectionSettingsRoute,
 })
+
+function PublicDemoSettingsRedirect() {
+  return <Navigate replace to="/home" />
+}
 
 function getCapabilityIcon(result: CapabilityProbeResult | undefined) {
   if (!result) {

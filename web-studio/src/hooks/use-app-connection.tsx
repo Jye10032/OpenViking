@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useRouterState } from '@tanstack/react-router'
 
 import i18n from '#/i18n'
+import { PUBLIC_DEMO, publicDemoConnection } from '#/lib/public-demo'
 import { fetchAdminAccounts } from '#/lib/admin'
 import { isOvClientError, ovClient } from '#/lib/ov-client'
 
@@ -432,6 +433,7 @@ export function createManagementAccountConnection(
 }
 
 function readInitialConnection(): ConnectionDraft {
+  if (PUBLIC_DEMO) return publicDemoConnection()
   const storedConnection = readStoredConnection()
   const adminApiKey =
     ENV_ADMIN_API_KEY ||
@@ -696,6 +698,7 @@ export function AppConnectionProvider({
 
   const value = React.useMemo<AppConnectionContextValue>(() => {
     const commitConnection = (next: ConnectionDraft) => {
+      if (PUBLIC_DEMO) return
       authPromptSuppressedUntilRef.current =
         Date.now() + AUTH_PROMPT_SUPPRESSION_MS
       const normalized = synchronizeConnectionRuntime(next, serverMode)

@@ -1,5 +1,10 @@
 const workspace = {
   appShell: {
+    publicDemo: {
+      title: 'Public read-only showcase · default / jye10032',
+      description:
+        'Connected automatically. Browse existing resources, memories, sessions and usage. Creation, editing, deletion, administration and new conversations are disabled.',
+    },
     footer: {
       agentIntegrations: 'Agent Integrations',
       beta: 'Beta',

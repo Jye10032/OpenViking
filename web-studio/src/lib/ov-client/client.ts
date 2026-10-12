@@ -3,6 +3,7 @@ import type { InternalAxiosRequestConfig } from 'axios'
 
 import { createClient } from '#/gen/ov-client/client'
 import { client as sdkClient } from '#/gen/ov-client/client.gen'
+import { PUBLIC_DEMO } from '#/lib/public-demo'
 
 import { normalizeOvClientError, OvClientError } from './errors'
 import { DEFAULT_API_KEY_STORAGE_KEY } from './types'
@@ -35,6 +36,7 @@ const ENV_BASE_URL =
 
 function normalizeBaseUrl(baseUrl?: string): string {
   const fallback = isBrowser() ? window.location.origin : ''
+  if (PUBLIC_DEMO) return fallback
   return (baseUrl || ENV_BASE_URL || fallback).trim().replace(/\/+$/, '')
 }
 
